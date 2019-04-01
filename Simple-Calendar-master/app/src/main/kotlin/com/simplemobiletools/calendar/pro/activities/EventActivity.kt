@@ -3,7 +3,6 @@ package com.simplemobiletools.calendar.pro.activities
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import android.view.Menu
@@ -26,7 +25,6 @@ import com.simplemobiletools.commons.models.RadioItem
 import kotlinx.android.synthetic.main.activity_event.*
 import org.joda.time.DateTime
 import java.util.*
-import java.util.regex.Pattern
 
 class EventActivity : SimpleActivity() {
     private val LAT_LON_PATTERN = "^[-+]?([1-8]?\\d(\\.\\d+)?|90(\\.0+)?)([,;])\\s*[-+]?(180(\\.0+)?|((1[0-7]\\d)|([1-9]?\\d))(\\.\\d+)?)\$"
@@ -119,7 +117,6 @@ class EventActivity : SimpleActivity() {
             updateCalDAVCalendar()
         }
 
-        event_show_on_map.setOnClickListener { showOnMap() }
         event_start_date.setOnClickListener { setupStartDate() }
         event_start_time.setOnClickListener { setupStartTime() }
         event_end_date.setOnClickListener { setupEndDate() }
@@ -247,7 +244,6 @@ class EventActivity : SimpleActivity() {
         mEventStartDateTime = Formatter.getDateTimeFromTS(realStart)
         mEventEndDateTime = Formatter.getDateTimeFromTS(realStart + duration)
         event_title.setText(mEvent.title)
-        event_location.setText(mEvent.location)
         event_description.setText(mEvent.description)
 
         mReminder1Minutes = mEvent.reminder1Minutes
@@ -276,7 +272,6 @@ class EventActivity : SimpleActivity() {
             mEventEndDateTime = Formatter.getDateTimeFromTS(endTS)
 
             event_title.setText(intent.getStringExtra("title"))
-            event_location.setText(intent.getStringExtra("eventLocation"))
             event_description.setText(intent.getStringExtra("description"))
             if (event_description.value.isNotEmpty()) {
                 event_description.movementMethod = LinkMovementMethod.getInstance()
@@ -794,7 +789,6 @@ class EventActivity : SimpleActivity() {
             eventType = newEventType
             lastUpdated = System.currentTimeMillis()
             source = newSource
-            location = event_location.value
         }
 
         // recreate the event if it was moved in a different CalDAV calendar
@@ -893,33 +887,6 @@ class EventActivity : SimpleActivity() {
         event_end_time.setTextColor(textColor)
     }
 
-    private fun showOnMap() {
-        if (event_location.value.isEmpty()) {
-            toast(R.string.please_fill_location)
-            return
-        }
-
-        val pattern = Pattern.compile(LAT_LON_PATTERN)
-        val locationValue = event_location.value
-        val uri = if (pattern.matcher(locationValue).find()) {
-            val delimiter = if (locationValue.contains(';')) ";" else ","
-            val parts = locationValue.split(delimiter)
-            val latitude = parts.first()
-            val longitude = parts.last()
-            Uri.parse("geo:$latitude,$longitude")
-        } else {
-            val location = Uri.encode(locationValue)
-            Uri.parse("geo:0,0?q=$location")
-        }
-
-        val intent = Intent(Intent.ACTION_VIEW, uri)
-        if (intent.resolveActivity(packageManager) != null) {
-            startActivity(intent)
-        } else {
-            toast(R.string.no_app_found)
-        }
-    }
-
     private fun setupStartDate() {
         hideKeyboard()
         config.backgroundColor.getContrastColor()
@@ -1013,6 +980,5 @@ class EventActivity : SimpleActivity() {
         event_reminder_image.applyColorFilter(textColor)
         event_type_image.applyColorFilter(textColor)
         event_caldav_calendar_image.applyColorFilter(textColor)
-        event_show_on_map.applyColorFilter(getAdjustedPrimaryColor())
     }
 }
